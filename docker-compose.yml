@@ -1,0 +1,44 @@
+
+services:
+
+  broker:
+    image: eclipse-mosquitto:2
+    container_name: mqtt-broker
+    volumes:
+      - ./broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - iot-network
+
+  device:
+    build:
+      context: ./device
+    container_name: iot-device-simulator
+    environment:
+      MQTT_BROKER_HOST: broker
+    depends_on:
+      - broker
+    networks:
+      - iot-network
+
+  server:
+    build:
+      context: ./server
+    container_name: iot-application-server
+    environment:
+      MQTT_BROKER_HOST: broker
+      DB_PATH: /app/data/heart_rates.db
+    ports:
+      - "127.0.0.1:8080:5000"
+    volumes:
+      - sqlite-data:/app/data
+    depends_on:
+      - broker
+    networks:
+      - iot-network
+
+networks:
+  iot-network:
+    driver: bridge
+
+volumes:
+  sqlite-data:
