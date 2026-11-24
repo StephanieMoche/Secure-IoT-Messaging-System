@@ -19,6 +19,26 @@ The application server processes incoming messages, persists
 the readings in a database and provides a web interface for
 viewing and filtering historical data.
 
+## Project Motivation and Significance
+
+The increasing adoption of Internet of Things (IoT) devices across healthcare, transportation, industrial automation and other sectors has created a growing need for secure, efficient and reliable device-to-server communication.
+
+In healthcare, connected devices can facilitate continuous remote patient monitoring by transmitting physiological measurements to centralized application servers. However, inadequate security mechanisms can expose sensitive information to unauthorized access, interception and manipulation.
+
+This project explores the use of MQTT as a lightweight messaging protocol for resource-constrained IoT environments, alongside security mechanisms intended to protect data confidentiality and integrity.
+
+Using simulated heart-rate monitoring as a practical use case, the project investigates:
+
+- Efficient asynchronous device-to-server communication.
+- Secure transmission of sensitive information.
+- Device authentication and topic-level authorization.
+- Reliable data processing and persistence.
+- System observability, performance and scalability.
+
+Although healthcare is the primary use case, the underlying architectural principles are applicable to industrial IoT, connected vehicles, smart infrastructure and other distributed systems.
+
+The project serves as a proof of concept rather than a production-ready healthcare application.
+
 ## System Architecture
 
 ```mermaid
@@ -183,26 +203,44 @@ secure-iot-health-monitoring/
 | Search by device ID             | Passed |
 | Database persistence            | Passed |
 
-## Known Limitations — V1
+## Original Implementation Challenges and Lessons Learned
 
-This release represents the functional baseline of the
-original project.
+The initial implementation, developed in August 2024, successfully demonstrated simulated health-data generation, MQTT-based communication, server-side data processing, database persistence and web-based visualization.
 
-The original project identified unresolved challenges in
-security and scalability testing, including:
+However, functional and non-functional testing revealed several unresolved challenges.
 
-- Unencrypted MQTT communication.
-- Incomplete TLS implementation.
-- Lack of effective MQTT client authentication.
-- Incomplete topic-level access control.
-- Unsuccessful monitoring and load-testing configuration.
+### TLS Encryption
 
-The reconstructed baseline intentionally uses plaintext
-MQTT and anonymous broker access within a local Docker
-network.
+The original TLS configuration was unsuccessful, resulting in health data being transmitted in plaintext. This exposed the communication channel to potential interception and manipulation, compromising data confidentiality and integrity.
 
-It is intended for local development and demonstration,
-not production deployment.
+### Device Authentication and Access Control
+
+The intended authentication mechanisms and MQTT Access Control Lists (ACLs) were not successfully enforced. Unauthorized clients could establish connections to the broker, highlighting the need for stronger authentication and topic-level authorization.
+
+### Monitoring and Scalability Testing
+
+Configuration challenges involving Prometheus, Grafana and k6 prevented comprehensive performance and scalability testing.
+
+Consequently, the system's ability to accommodate increasing numbers of connected devices, higher message volumes and sustained workloads could not be verified.
+
+### Reconstructed Baseline — V1
+
+The November 2026 reconstruction establishes a reproducible functional baseline using Docker Compose while retaining the original application's core functionality.
+
+Plaintext MQTT communication and anonymous broker access are intentionally retained within the local development environment to preserve the baseline against which subsequent security improvements will be evaluated.
+
+### Engineering Lessons
+
+The original implementation highlighted several important lessons:
+
+- Functional correctness does not necessarily imply system security.
+- Authentication and authorization must be independently implemented and verified.
+- Encryption must be validated rather than assumed to work.
+- Scalability claims require measurable performance-testing evidence.
+- Observability is essential for understanding system behaviour.
+- Reproducible environments simplify development, testing and troubleshooting.
+
+These findings form the foundation for V2, which aims to address the original shortcomings through incremental implementation, security verification, automated testing and measurable performance evaluation.
 
 ## Development Roadmap
 
