@@ -2,14 +2,16 @@
 import os
 import random
 import time
+import ssl
 
 import paho.mqtt.client as mqtt
 
 
-BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "broker")
-BROKER_PORT = 1883
-TOPIC = "health/heart_rate"
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "broker")
+MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "8883"))
+MQTT_CA_CERT = os.getenv("MQTT_CA_CERT", "/app/certs/ca.crt")
 
+TOPIC = "health/heart_rate"
 USERS = ["John", "Jane", "Sarah", "Rob", "Steph"]
 
 
@@ -23,8 +25,13 @@ def on_connect(client, userdata, flags, rc):
 def connect_to_broker(client):
     while True:
         try:
-            client.connect(BROKER_HOST, BROKER_PORT, 60)
+            client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, keepalive=60)
             return
+
+        except ssl.SSLError as exc:
+            print(f"TLS connection failed: {exc}", flush=True)
+            raise
+
         except OSError:
             print("Waiting for MQTT broker...")
             time.sleep(3)
@@ -32,6 +39,19 @@ def connect_to_broker(client):
 
 def main():
     client = mqtt.Client(client_id="raspberry-pi-simulator")
+
+    tls_context = ssl.create_default_context(
+        purpose=ssl.Purpose.SERVER_AUTH,
+        cafile=MQTT_CA_CERT
+    )
+
+    tls_context.minimum_version = ssl.TLSVersion.TLSv1_2
+    tls_context.verify_mode = ssl.CERT_REQUIRED
+    tls_context.check_hostname = True
+
+    client.tls_set_context(tls_context)
+
+
     client.on_connect = on_connect
 
     connect_to_broker(client)

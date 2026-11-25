@@ -1,6 +1,7 @@
 
 import os
 import time
+import ssl
 
 import paho.mqtt.client as mqtt
 
@@ -13,8 +14,10 @@ from database import (
 )
 
 
-BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "broker")
-BROKER_PORT = 1883
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "broker")
+MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "8883"))
+MQTT_CA_CERT = os.getenv("MQTT_CA_CERT", "/app/certs/ca.crt")
+
 TOPIC = "health/heart_rate"
 
 app = Bottle()
@@ -50,20 +53,33 @@ def on_message(client, userdata, message):
 
 
 def start_mqtt():
-    client = mqtt.Client(
-        client_id="application-server"
+    client = mqtt.Client(client_id="application-server" )
+
+    tls_context = ssl.create_default_context(
+        purpose=ssl.Purpose.SERVER_AUTH,
+        cafile=MQTT_CA_CERT
     )
+
+    tls_context.minimum_version = ssl.TLSVersion.TLSv1_2
+    tls_context.verify_mode = ssl.CERT_REQUIRED
+    tls_context.check_hostname = True
+
+    client.tls_set_context(tls_context)
 
     client.on_connect = on_connect
     client.on_message = on_message
 
     while True:
         try:
-            client.connect(BROKER_HOST, BROKER_PORT, 60)
+            client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, 60)
             break
 
-        except OSError:
-            print("Waiting for MQTT broker...")
+        except ssl.SSLError as exc:
+            print(f"TLS connection failed: {exc}", flush=True)
+            raise
+
+        except OSError as exc:
+            print(f"Broker unavailable: {exc}", flush=True)
             time.sleep(3)
 
     client.loop_start()

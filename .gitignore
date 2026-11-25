@@ -36,3 +36,24 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# V2 - Generated certificates and private keys
+security/certs/
+*.key
+*.pem
+*.crt
+*.csr
+*.srl
+*.p12
+*.pfx
+
+# MQTT authentication credentials
+broker/passwords
+broker/password_file
+
+# Local secrets
+secrets/
+
+# Security testing captures
+*.pcap
+*.pcapng
