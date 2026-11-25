@@ -225,7 +225,7 @@ Consequently, the system's ability to accommodate increasing numbers of connecte
 
 ### Reconstructed Baseline — V1
 
-The November 2026 reconstruction establishes a reproducible functional baseline using Docker Compose while retaining the original application's core functionality.
+The 2026 reconstruction establishes a reproducible functional baseline using Docker Compose while retaining the original application's core functionality.
 
 Plaintext MQTT communication and anonymous broker access are intentionally retained within the local development environment to preserve the baseline against which subsequent security improvements will be evaluated.
 
